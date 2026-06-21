@@ -1,29 +1,30 @@
-# 🔓 Falcon RDP Brute-Force System
+# 🔐 Falcon RDP Brute-Force System
 
 سیستم حمله Brute-Force تخصصی برای RDP با معماری توزیع‌شده، UI حرفه‌ای و ویژگی‌های پیشرفته.
 
 ## 🎯 ویژگی‌های اصلی
 
-### ۱. معماری قدرتمند
+### 1. معماری قدرتمند
 - **Worker Pool** قابل تنظیم برای Concurrency بالا
 - **Goroutine** و **Channel** برای I/O غیرهمزمان
 - **Context**-based لغو عملیات و مدیریت Timeout
 - بهینه‌سازی Multi-Core
 
-### ۲. مدیریت ورودی�n- خواندن `servers.txt` (IP:Port)
+### 2. مدیریت ورودی
+- خواندن `servers.txt` (IP:Port)
 - خواندن `users.txt` (نام‌های کاربری)
 - خواندن `passwords.txt` (رمزها)
 - تولید **کارتزینی** Credential ترکیبی
 - استخراج دامنه خودکار (DOMAIN\user یا user@domain)
 
-### ۳. موتور حمله RDP
+### 3. موتور حمله RDP
 - **Password Spraying** (ایمن‌ترین روش)
 - **Credential Stuffing** (تست همه رمزها روی یک کاربر)
 - **Hybrid Mode**
 - احراز هویت واقعی با **grdp** (NLA، CredSSP، TLS)
 - کنترل نرخ (PPS) و Rate Limiting
 
-### ۴. شناسایی و هوشمندی (Recon)
+### 4. شناسایی و هوشمندی (Recon)
 - **Pre-Attack Recon** خودکار و همزمان
 - بررسی باز بودن RDP (X.224)
 - تشخیص NLA و SSL
@@ -31,32 +32,32 @@
 - اندازه‌گیری Latency
 - طبقه‌بندی خطاها و تغییر استراتژی
 
-### ۵. ضدتشخیص و مخفی‌کاری
+### 5. ضدتشخیص و مخفی‌کاری
 - **Stealth Mode** با تاخیر تصادفی (Jitter)
 - **Adaptive Rate Limiting**
 - **Low & Slow** حملات طولانی‌مدت
 - پشتیبانی **Proxy**: SOCKS5, HTTP, TOR
 - **IP Rotation** خودکار
 
-### ۶. جلوگیری از قفل شدن
-- شمارش تلاش‌های ناموفق به صورت (User, Target)
+### 6. جلوگیری از قفل شدن
+- شمارش تلاش‌های ناموفق (User, Target)
 - توقف موقت برای کاربر وقتی به آستانه رسید
-- **Cooldown Period**
+- **Cooldown Period** قابل تنظیم
 - تنظیم خودکار به Password Spraying
 
-### ۷. مدیریت وضعیت
+### 7. مدیریت وضعیت
 - **Checkpoint** ذخیره‌سازی مرتب
 - **Resume** از نقطه قطع
 - جلوگیری از تکرار تلاش‌ها
 - ذخیره state.json
 
-### ۸. گزارش‌گیری و لاگینگ
+### 8. گزارش‌گیری و لاگینگ
 - لاگینگ لحظه‌ای با سطوح (INFO، SUCCESS، WARNING، ERROR)
 - ذخیره نتایج موفق در `results.json`
 - گزارش نهایی (JSON و CSV)
 - Session Storage
 
-### ۹. رابط کاربری (Fyne)
+### 9. رابط کاربری (Fyne)
 - **Dashboard Tab**: Start/Stop، PPS، آمار، Progress Bar
 - **Files Tab**: انتخاب فایل‌ها، تولید Credential
 - **Settings Tab**: Threads، Timeout، Stealth، Proxy، Resume
@@ -103,7 +104,7 @@ falcon_rdp/
 
 ## 🚀 نحوه استفاده
 
-### ۱. نصب
+### 1. نصب
 ```bash
 git clone https://github.com/falconjonz/falcon_rdp.git
 cd falcon_rdp
@@ -111,7 +112,7 @@ go mod download
 go build -o falcon_rdp
 ```
 
-### ۲. فایل‌های ورودی
+### 2. فایل‌های ورودی
 
 **servers.txt**
 ```
@@ -136,7 +137,7 @@ test
 default
 ```
 
-### ۳. اجرا
+### 3. اجرا
 ```bash
 ./falcon_rdp
 ```
@@ -195,8 +196,8 @@ default
 
 ## 📈 Performance
 
-- **بیش از ۱۰۰۰ تلاش در ثانیه** (بدون Proxy)
-- **مقیاس‌پذیری** تا ۱۰۰+ هدف همزمان
+- **بیش از 1000 تلاش در ثانیه** (بدون Proxy)
+- **مقیاس‌پذیری** تا 100+ هدف همزمان
 - **کم مصرف** با Streaming فایل‌های بزرگ
 
 ## 📝 لایسنس
@@ -211,4 +212,4 @@ MIT License
 
 **توسعه‌دهنده**: falconjonz  
 **نسخه**: 1.0.0  
-**آخرین بروزرسانی**: 2024
+**آخرین بروزرسانی**: 2026
