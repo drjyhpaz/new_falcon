@@ -1,0 +1,6 @@
+github.com/fyne-io/fyne/v2 v2.4.1 h1:V8kVrpD8GK0Reufd360gLRWQo5iMGnWIf+5KvqnR5M=
+github.com/fyne-io/fyne/v2 v2.4.1/go.mod h1:I73SptzpmvSHVEBrq2zFuGrVj+xMltlubno7z2ZVcU=
+github.com/goccy/go-yaml v1.11.0 h1:ealI+u3OFMvjlNvHR9Xo/BfNhGvyL6hVzRQJJjnWQI=
+github.com/goccy/go-yaml v1.11.0/go.mod h1:dRVijU0401aVxvsicMGSdXh1e3V1jSi0g/CqJJKX9s=
+github.com/sirupsen/logrus v1.9.3 h1:drlAWCbkq5rQVVVTJW/kD4QxOtxyAahml2AmqCFKW0=
+github.com/sirupsen/logrus v1.9.3/go.mod h1:naHLuLoDiP4jHNo9R0sCBkJ1d5SZKDvnQZOTOiXAw=
