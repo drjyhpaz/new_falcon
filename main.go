@@ -1,126 +1,151 @@
 package main
 
 import (
+	"falcon/config"
+	"falcon/credentials"
+	"falcon/logger"
+	"flag"
 	"fmt"
-	"log"
 	"os"
-
-	"github.com/falconjonz/falcon_rdp/attack"
-	"github.com/falconjonz/falcon_rdp/config"
-	"github.com/falconjonz/falcon_rdp/credentials"
-	"github.com/falconjonz/falcon_rdp/logger"
-	"github.com/falconjonz/falcon_rdp/utils"
 )
 
 func main() {
+	// Command line flags
+	var (
+		uiMode       = flag.Bool("ui", false, "Start with GUI interface")
+		serversFile  = flag.String("servers", "servers.txt", "Path to servers.txt")
+		usersFile    = flag.String("users", "users.txt", "Path to users.txt")
+		passwordsFile = flag.String("passwords", "passwords.txt", "Path to passwords.txt")
+		threads      = flag.Int("threads", 0, "Number of threads (0 for auto)")
+		timeout      = flag.Int("timeout", 10, "Timeout in seconds")
+		stealth      = flag.Bool("stealth", false, "Enable stealth mode")
+		proxy        = flag.Bool("proxy", false, "Enable proxy")
+		proxyFile    = flag.String("proxy-file", "proxies.txt", "Path to proxy file")
+		resume       = flag.Bool("resume", false, "Resume from checkpoint")
+		postLogin    = flag.Bool("postlogin", false, "Enable post-login automation")
+		generate     = flag.Bool("generate", false, "Generate credentials from files")
+		version      = flag.Bool("version", false, "Show version")
+		help         = flag.Bool("help", false, "Show help")
+	)
+
+	flag.Parse()
+
+	// Initialize logger
+	_ = logger.Init("falcon.log")
+	defer logger.Close()
+
+	if *version {
+		fmt.Println("Falcon RDP Brute-Force Tool v1.0")
+		return
+	}
+
+	if *help {
+		flag.PrintDefaults()
+		return
+	}
+
 	// Load configuration
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
+		logger.Error("Failed to load config: %v", err)
+		os.Exit(1)
 	}
 
-	// Initialize logger
-	appLog, err := logger.NewLogger(cfg.Logging.File, cfg.Logging.Level)
+	// Override config with flags
+	if *threads > 0 {
+		cfg.Attack.Threads = *threads
+	}
+	if *stealth {
+		cfg.Attack.StealthMode = true
+	}
+	if *proxy {
+		cfg.Attack.ProxyEnabled = true
+		cfg.Attack.ProxyFile = *proxyFile
+	}
+	if *resume {
+		cfg.Attack.ResumeEnabled = true
+	}
+	if *postLogin {
+		cfg.Attack.PostLoginEnabled = true
+	}
+
+	// Generate credentials if requested
+	if *generate {
+		generateCredentialsCommand(*serversFile, *usersFile, *passwordsFile)
+		return
+	}
+
+	// Start UI if requested
+	if *uiMode {
+		startUI(cfg)
+		return
+	}
+
+	// CLI mode
+	startCLI(cfg, *serversFile, *usersFile, *passwordsFile)
+}
+
+func generateCredentialsCommand(serversFile, usersFile, passwordsFile string) {
+	logger.Info("Generating credentials...")
+
+	users, err := credentials.LoadUsers(usersFile)
 	if err != nil {
-		log.Fatalf("Failed to initialize logger: %v", err)
+		logger.Error("Failed to load users: %v", err)
+		return
 	}
-	defer appLog.Close()
 
-	appLog.Info("=" * 50)
-	appLog.Info("Falcon RDP Brute-Force System Started")
-	appLog.Infof("Attack Strategy: %s", cfg.Attack.Strategy)
-	appLog.Infof("Threads: %d", cfg.Attack.Threads)
-	appLog.Infof("Timeout: %v", cfg.Attack.Timeout)
+	passwords, err := credentials.LoadPasswords(passwordsFile)
+	if err != nil {
+		logger.Error("Failed to load passwords: %v", err)
+		return
+	}
+
+	creds := credentials.GenerateCredentials(users, passwords, "")
+	err = credentials.SaveCredentials(creds, "credentials.txt")
+	if err != nil {
+		logger.Error("Failed to save credentials: %v", err)
+		return
+	}
+
+	logger.Success("Generated %d credentials", len(creds))
+}
+
+func startUI(cfg *config.Config) {
+	logger.Info("Starting UI...")
+	// TODO: Implement UI
+	logger.Info("UI not yet implemented")
+}
+
+func startCLI(cfg *config.Config, serversFile, usersFile, passwordsFile string) {
+	logger.Info("Starting CLI mode...")
 
 	// Load targets
-	targets, err := loadTargets("servers.txt", appLog)
+	targets, err := credentials.LoadServers(serversFile)
 	if err != nil {
-		appLog.Errorf("Failed to load targets: %v", err)
+		logger.Error("Failed to load servers: %v", err)
 		return
 	}
-	appLog.Infof("Loaded %d targets", len(targets))
+
+	if len(targets) == 0 {
+		logger.Error("No targets loaded")
+		return
+	}
+
+	logger.Info("Loaded %d targets", len(targets))
 
 	// Load credentials
-	credLoader := credentials.NewCredentialLoader()
-	if err := credLoader.LoadUsers("users.txt"); err != nil {
-		appLog.Errorf("Failed to load users: %v", err)
-		return
-	}
-	if err := credLoader.LoadPasswords("passwords.txt"); err != nil {
-		appLog.Errorf("Failed to load passwords: %v", err)
-		return
-	}
-
-	// Generate credentials
-	if err := credLoader.GenerateCredentials(""); err != nil {
-		appLog.Errorf("Failed to generate credentials: %v", err)
-		return
-	}
-
-	creds := credLoader.GetCredentials()
-	appLog.Infof("Generated %d credentials", len(creds))
-
-	// Create attack engine
-	engine := attack.NewAttackEngine(cfg, appLog)
-	engine.SetTargets(targets)
-	engine.SetCredentials(creds)
-
-	// Start attack
-	if err := engine.Start(); err != nil {
-		appLog.Errorf("Failed to start attack: %v", err)
-		return
-	}
-
-	appLog.Info("Attack started...")
-
-	// Wait for attack to complete
-	engine.workerPool.Wait()
-	engine.Stop()
-
-	// Get results
-	results := engine.GetResults()
-	stats := engine.GetStats()
-
-	appLog.Infof("\n=== Attack Summary ===")
-	appLog.Infof("Total Attempts: %d", stats.TotalAttempts)
-	appLog.Infof("Successful: %d", stats.SuccessfulLogins)
-	appLog.Infof("Failed: %d", stats.FailedAttempts)
-	appLog.Infof("Duration: %v", stats.EndTime.Sub(stats.StartTime))
-
-	// Display results
-	if len(results) > 0 {
-		appLog.Info("\n=== Successful Logins ===")
-		for _, result := range results {
-			appLog.Successf("%s:%d | %s:%s", result.IP, result.Port, result.Username, result.Password)
-		}
-	} else {
-		appLog.Info("No successful logins found")
-	}
-}
-
-func loadTargets(filename string, log *logger.Logger) ([]config.Target, error) {
-	lines, err := utils.ReadFile(filename)
+	users, err := credentials.LoadUsers(usersFile)
 	if err != nil {
-		return nil, err
+		logger.Error("Failed to load users: %v", err)
+		return
 	}
 
-	var targets []config.Target
-	for _, line := range lines {
-		ip, port, err := utils.ParseTargetString(line)
-		if err != nil {
-			log.Warnf("Invalid target: %s - %v", line, err)
-			continue
-		}
-
-		targets = append(targets, config.Target{
-			IP:   ip,
-			Port: port,
-		})
+	passwords, err := credentials.LoadPasswords(passwordsFile)
+	if err != nil {
+		logger.Error("Failed to load passwords: %v", err)
+		return
 	}
 
-	return targets, nil
+	creds := credentials.GenerateCredentials(users, passwords, cfg.Attack.DefaultDomain)
+	logger.Info("Loaded %d credentials", len(creds))
 }
-
-const (
-	_ = iota
-)

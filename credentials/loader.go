@@ -1,142 +1,91 @@
 package credentials
 
 import (
+	"bufio"
+	"falcon/config"
 	"fmt"
+	"os"
 	"strings"
-	"sync"
-
-	"github.com/falconjonz/falcon_rdp/config"
-	"github.com/falconjonz/falcon_rdp/utils"
 )
 
-type CredentialLoader struct {
-	users       []string
-	passwords   []string
-	credentials []config.Credential
-	mu          sync.RWMutex
-}
+// LoadServers loads targets from servers.txt
+func LoadServers(filename string) ([]*config.Target, error) {
+	var targets []*config.Target
 
-// NewCredentialLoader creates a new credential loader
-func NewCredentialLoader() *CredentialLoader {
-	return &CredentialLoader{}
-}
-
-// LoadUsers loads usernames from file
-func (cl *CredentialLoader) LoadUsers(filename string) error {
-	lines, err := utils.ReadFile(filename)
+	file, err := os.Open(filename)
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("failed to open servers file: %w", err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		parts := strings.Split(line, ":")
+		if len(parts) != 2 {
+			continue
+		}
+
+		ip := strings.TrimSpace(parts[0])
+		var port int
+		fmt.Sscanf(strings.TrimSpace(parts[1]), "%d", &port)
+
+		if port <= 0 || port > 65535 {
+			continue
+		}
+
+		target := &config.Target{
+			IP:   ip,
+			Port: port,
+		}
+		targets = append(targets, target)
 	}
 
-	cl.mu.Lock()
-	cl.users = lines
-	cl.mu.Unlock()
-
-	return nil
+	return targets, scanner.Err()
 }
 
-// LoadPasswords loads passwords from file
-func (cl *CredentialLoader) LoadPasswords(filename string) error {
-	lines, err := utils.ReadFile(filename)
+// LoadUsers loads usernames from users.txt
+func LoadUsers(filename string) ([]string, error) {
+	var users []string
+
+	file, err := os.Open(filename)
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("failed to open users file: %w", err)
 	}
+	defer file.Close()
 
-	cl.mu.Lock()
-	cl.passwords = lines
-	cl.mu.Unlock()
-
-	return nil
-}
-
-// LoadCredentials loads pre-generated credentials from file
-func (cl *CredentialLoader) LoadCredentials(filename string) error {
-	lines, err := utils.ReadFile(filename)
-	if err != nil {
-		return err
-	}
-
-	cl.mu.Lock()
-	defer cl.mu.Unlock()
-
-	for _, line := range lines {
-		domain, user := utils.ParseDomain(line)
-		parts := strings.SplitN(user, ":", 2)
-		if len(parts) == 2 {
-			cl.credentials = append(cl.credentials, config.Credential{
-				Username: parts[0],
-				Password: parts[1],
-				Domain:   domain,
-			})
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line != "" && !strings.HasPrefix(line, "#") {
+			users = append(users, line)
 		}
 	}
 
-	return nil
+	return users, scanner.Err()
 }
 
-// GenerateCredentials generates cartesian product of users and passwords
-func (cl *CredentialLoader) GenerateCredentials(defaultDomain string) error {
-	cl.mu.Lock()
-	defer cl.mu.Unlock()
+// LoadPasswords loads passwords from passwords.txt
+func LoadPasswords(filename string) ([]string, error) {
+	var passwords []string
 
-	if len(cl.users) == 0 || len(cl.passwords) == 0 {
-		return fmt.Errorf("users or passwords not loaded")
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open passwords file: %w", err)
 	}
+	defer file.Close()
 
-	cl.credentials = make([]config.Credential, 0, len(cl.users)*len(cl.passwords))
-
-	for _, user := range cl.users {
-		domain, username := utils.ParseDomain(user)
-		if domain == "" {
-			domain = defaultDomain
-		}
-
-		for _, pass := range cl.passwords {
-			cl.credentials = append(cl.credentials, config.Credential{
-				Username: username,
-				Password: pass,
-				Domain:   domain,
-			})
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line != "" && !strings.HasPrefix(line, "#") {
+			passwords = append(passwords, line)
 		}
 	}
 
-	return nil
-}
-
-// GetCredentials returns all credentials
-func (cl *CredentialLoader) GetCredentials() []config.Credential {
-	cl.mu.RLock()
-	defer cl.mu.RUnlock()
-
-	// Return a copy
-	creds := make([]config.Credential, len(cl.credentials))
-	copy(creds, cl.credentials)
-	return creds
-}
-
-// GetUsers returns all users
-func (cl *CredentialLoader) GetUsers() []string {
-	cl.mu.RLock()
-	defer cl.mu.RUnlock()
-
-	users := make([]string, len(cl.users))
-	copy(users, cl.users)
-	return users
-}
-
-// GetPasswords returns all passwords
-func (cl *CredentialLoader) GetPasswords() []string {
-	cl.mu.RLock()
-	defer cl.mu.RUnlock()
-
-	passes := make([]string, len(cl.passwords))
-	copy(passes, cl.passwords)
-	return passes
-}
-
-// Count returns credential count
-func (cl *CredentialLoader) Count() int {
-	cl.mu.RLock()
-	defer cl.mu.RUnlock()
-	return len(cl.credentials)
+	return passwords, scanner.Err()
 }

@@ -1,8 +1,9 @@
 package attack
 
 import (
-	"falcon/logger"
+	"fmt"
 	"sync"
+	"time"
 )
 
 // NewWorkerPool creates a new worker pool
@@ -24,6 +25,7 @@ func (wp *WorkerPool) Start() {
 
 // Stop stops the worker pool
 func (wp *WorkerPool) Stop() {
+	close(wp.Jobs)
 	wp.Wg.Wait()
 	close(wp.Results)
 }
@@ -33,14 +35,15 @@ func (wp *WorkerPool) worker(id int) {
 	defer wp.Wg.Done()
 
 	for job := range wp.Jobs {
-		logger.Debug("Worker %d processing job for %s:%d", id, job.Target.IP, job.Target.Port)
-		// TODO: Implement actual attack logic
-		// For now, just create a dummy result
+		// Process job
+		// TODO: Implement actual attack logic based on service
+		
 		result := &config.Result{
 			IP:        job.Target.IP,
 			Port:      job.Target.Port,
 			Username:  job.Credential.Username,
 			Password:  job.Credential.Password,
+			Domain:    job.Credential.Domain,
 			Success:   false,
 			Timestamp: time.Now(),
 		}
@@ -51,5 +54,4 @@ func (wp *WorkerPool) worker(id int) {
 
 import (
 	"falcon/config"
-	"time"
 )

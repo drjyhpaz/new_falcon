@@ -1,118 +1,80 @@
 package config
 
-import (
-	"time"
-)
+import "time"
 
-// AttackStrategy defines the attack mode
-type AttackStrategy string
-
-const (
-	PasswordSpray    AttackStrategy = "spray"
-	CredentialStuff  AttackStrategy = "stuff"
-	Hybrid           AttackStrategy = "hybrid"
-)
-
-// Config holds all configuration for the tool
-type Config struct {
-	// Attack Settings
-	Attack AttackConfig `json:"attack"`
-
-	// RDP Settings
-	RDP RDPConfig `json:"rdp"`
-
-	// Stealth Settings
-	Stealth StealthConfig `json:"stealth"`
-
-	// Proxy Settings
-	Proxy ProxyConfig `json:"proxy"`
-
-	// State Management
-	State StateConfig `json:"state"`
-
-	// Logging
-	Logging LogConfig `json:"logging"`
-}
-
+// AttackConfig holds the attack configuration
 type AttackConfig struct {
-	Strategy        AttackStrategy `json:"strategy"`
-	Threads         int            `json:"threads"`
-	Timeout         time.Duration  `json:"timeout"`
-	RateLimit       int            `json:"rate_limit"`        // requests per second
-	LockoutThreshold int           `json:"lockout_threshold"` // failed attempts before lockout
-	LockoutCooldown time.Duration  `json:"lockout_cooldown"`  // cooldown period
+	Threads              int
+	Timeout              time.Duration
+	PPS                  int // Packets Per Second
+	StealthMode          bool
+	ProxyEnabled         bool
+	ProxyType            string // SOCKS5, HTTP, TOR
+	ProxyFile            string
+	ResumeEnabled        bool
+	PostLoginEnabled     bool
+	DefaultDomain        string
+	InsecureTLS          bool
 }
 
-type RDPConfig struct {
-	Port              uint16        `json:"port"`
-	InsecureTLS       bool          `json:"insecure_tls"`
-	NLADetection      bool          `json:"nla_detection"`
-	PreAuthRecon      bool          `json:"pre_auth_recon"`
-	ReconTimeout      time.Duration `json:"recon_timeout"`
+// ReconConfig holds recon settings
+type ReconConfig struct {
+	CheckNLA      bool
+	CheckSSL      bool
+	DetectVersion bool
+	MeasureLatency bool
 }
 
-type StealthConfig struct {
-	Enabled         bool          `json:"enabled"`
-	JitterMin       time.Duration `json:"jitter_min"`
-	JitterMax       time.Duration `json:"jitter_max"`
-	AdaptiveRate    bool          `json:"adaptive_rate"`
-	LowAndSlow      bool          `json:"low_and_slow"`
+// EvasionConfig holds evasion settings
+type EvasionConfig struct {
+	MinDelay    int // milliseconds
+	MaxDelay    int // milliseconds
+	AdaptiveRate bool
 }
 
+// ProxyConfig holds proxy settings
 type ProxyConfig struct {
-	Enabled  bool   `json:"enabled"`
-	Type     string `json:"type"`     // socks5, http, tor
-	File     string `json:"file"`     // proxy list file
-	Rotation bool   `json:"rotation"`
+	Type     string   // SOCKS5, HTTP, TOR
+	List     []string // List of proxies
+	Rotation bool
 }
 
-type StateConfig struct {
-	ResumeEnabled      bool `json:"resume_enabled"`
-	CheckpointInterval int  `json:"checkpoint_interval"`
-}
-
-type LogConfig struct {
-	Level string `json:"level"` // debug, info, warn, error
-	File  string `json:"file"`
-}
-
-// Target represents an RDP target
+// Target represents an attack target
 type Target struct {
-	IP       string        `json:"ip"`
-	Port     uint16        `json:"port"`
-	Hostname string        `json:"hostname,omitempty"`
-	OS       string        `json:"os,omitempty"`
-	NLAEnabled bool        `json:"nla_enabled,omitempty"`
-	SSLEnabled bool        `json:"ssl_enabled,omitempty"`
-	Latency  time.Duration `json:"latency,omitempty"`
-	Status   string        `json:"status,omitempty"` // online, offline, recon_failed
+	IP       string
+	Port     int
+	Service  string
+	Version  string
+	NLAEnabled bool
+	SSLEnabled bool
+	Latency  int // milliseconds
+	Status   string // open, closed, filtered
 }
 
-// Credential represents a username:password pair
+// Credential represents a username/password pair
 type Credential struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Domain   string `json:"domain,omitempty"`
+	Username string
+	Password string
+	Domain   string
 }
 
-// Result represents a successful login
+// Result represents an attack result
 type Result struct {
-	IP        string            `json:"ip"`
-	Port      uint16            `json:"port"`
-	Username  string            `json:"username"`
-	Password  string            `json:"password"`
-	Domain    string            `json:"domain,omitempty"`
-	Timestamp time.Time         `json:"timestamp"`
-	OSInfo    map[string]string `json:"os_info,omitempty"`
-	IsAdmin   bool              `json:"is_admin,omitempty"`
+	IP        string
+	Port      int
+	Username  string
+	Password  string
+	Domain    string
+	Success   bool
+	Timestamp time.Time
+	Error     string
+	PostLogin map[string]interface{}
 }
 
-// Statistics tracks attack progress
-type Statistics struct {
-	TotalAttempts   int64
-	SuccessfulLogins int64
-	FailedAttempts  int64
-	SkippedTargets  int64
-	StartTime       time.Time
-	EndTime         time.Time
+// Config is the main configuration structure
+type Config struct {
+	Attack AttackConfig
+	Recon  ReconConfig
+	Evasion EvasionConfig
+	Proxy  ProxyConfig
 }

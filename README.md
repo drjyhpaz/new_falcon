@@ -1,73 +1,55 @@
-# 🔐 Falcon RDP Brute-Force System
+# 🦅 Falcon RDP Brute-Force System
 
-سیستم حمله Brute-Force تخصصی برای RDP با معماری توزیع‌شده، UI حرفه‌ای و ویژگی‌های پیشرفته.
+A comprehensive, high-performance RDP brute-force tool written in Go with advanced features including stealth mode, proxy support, automatic reconnaissance, and post-login automation.
 
-## 🎯 ویژگی‌های اصلی
+## 📋 Features
 
-### 1. معماری قدرتمند
-- **Worker Pool** قابل تنظیم برای Concurrency بالا
-- **Goroutine** و **Channel** برای I/O غیرهمزمان
-- **Context**-based لغو عملیات و مدیریت Timeout
-- بهینه‌سازی Multi-Core
+### Core Architecture
+- **Worker Pool Concurrency**: Configurable thread count with automatic CPU detection
+- **Goroutine & Channel**: Non-blocking I/O operations
+- **Context-based Timeout**: Graceful operation cancellation
+- **Multi-Core Optimization**: Efficient use of all available CPU cores
 
-### 2. مدیریت ورودی
-- خواندن `servers.txt` (IP:Port)
-- خواندن `users.txt` (نام‌های کاربری)
-- خواندن `passwords.txt` (رمزها)
-- تولید **کارتزینی** Credential ترکیبی
-- استخراج دامنه خودکار (DOMAIN\user یا user@domain)
+### Attack Capabilities
+- **Password Spraying**: Safe single-password multi-user testing
+- **Credential Stuffing**: Multi-password single-user testing
+- **Hybrid Mode**: Combined attack strategy
+- **Real RDP Authentication**: Full NLA, CredSSP, TLS implementation
 
-### 3. موتور حمله RDP
-- **Password Spraying** (ایمن‌ترین روش)
-- **Credential Stuffing** (تست همه رمزها روی یک کاربر)
-- **Hybrid Mode**
-- احراز هویت واقعی با **grdp** (NLA، CredSSP، TLS)
-- کنترل نرخ (PPS) و Rate Limiting
+### Evasion & Stealth
+- **Stealth Mode**: Random jitter between requests
+- **Adaptive Rate Limiting**: Automatic rate adjustment
+- **Proxy Support**: SOCKS5, HTTP, TOR with IP rotation
+- **Low & Slow**: Extended attack duration capability
 
-### 4. شناسایی و هوشمندی (Recon)
-- **Pre-Attack Recon** خودکار و همزمان
-- بررسی باز بودن RDP (X.224)
-- تشخیص NLA و SSL
-- تشخیص نسخه Windows
-- اندازه‌گیری Latency
-- طبقه‌بندی خطاها و تغییر استراتژی
+### Intelligence
+- **Pre-Attack Recon**: Automatic port, NLA, SSL detection
+- **Latency Measurement**: Response time analysis
+- **Error Classification**: Smart error handling and response
+- **Lockout Avoidance**: Automatic detection and prevention
 
-### 5. ضدتشخیص و مخفی‌کاری
-- **Stealth Mode** با تاخیر تصادفی (Jitter)
-- **Adaptive Rate Limiting**
-- **Low & Slow** حملات طولانی‌مدت
-- پشتیبانی **Proxy**: SOCKS5, HTTP, TOR
-- **IP Rotation** خودکار
+### Post-Login Automation
+- **Command Execution**: Run arbitrary commands on compromised systems
+- **System Discovery**: Automatic OS and network information gathering
+- **Admin Detection**: Privilege level verification
+- **Session Management**: Save and reconnect to sessions
+- **Lateral Movement**: Pivot to other systems in the network
 
-### 6. جلوگیری از قفل شدن
-- شمارش تلاش‌های ناموفق (User, Target)
-- توقف موقت برای کاربر وقتی به آستانه رسید
-- **Cooldown Period** قابل تنظیم
-- تنظیم خودکار به Password Spraying
+### State Management
+- **Checkpoint System**: Periodic state saving
+- **Resume Capability**: Continue from last checkpoint
+- **Result Persistence**: All successful logins logged
 
-### 7. مدیریت وضعیت
-- **Checkpoint** ذخیره‌سازی مرتب
-- **Resume** از نقطه قطع
-- جلوگیری از تکرار تلاش‌ها
-- ذخیره state.json
+### Reporting
+- **Real-time Logging**: Console and file logging
+- **JSON Reports**: Machine-readable results
+- **CSV Export**: Spreadsheet-compatible output
+- **Session Storage**: Reusable session information
 
-### 8. گزارش‌گیری و لاگینگ
-- لاگینگ لحظه‌ای با سطوح (INFO، SUCCESS، WARNING، ERROR)
-- ذخیره نتایج موفق در `results.json`
-- گزارش نهایی (JSON و CSV)
-- Session Storage
-
-### 9. رابط کاربری (Fyne)
-- **Dashboard Tab**: Start/Stop، PPS، آمار، Progress Bar
-- **Files Tab**: انتخاب فایل‌ها، تولید Credential
-- **Settings Tab**: Threads، Timeout، Stealth، Proxy، Resume
-- **Results Tab**: جدول نتایج، جستجو و فیلتر
-- **Recon Tab**: اطلاعات Pre-Recon
-
-## 📋 ساختار پروژه
+## 🏗️ Project Structure
 
 ```
-falcon_rdp/
+falcon/
 ├── main.go
 ├── go.mod
 ├── go.sum
@@ -77,139 +59,72 @@ falcon_rdp/
 ├── attack/
 │   ├── engine.go
 │   ├── worker.go
-│   └── strategies.go
-├── rdp/
-│   ├── auth.go
-│   ├── detector.go
-│   └── recon.go
+│   ├── rate_limiter.go
+│   └── lockout.go
 ├── credentials/
 │   ├── loader.go
 │   └── generator.go
-├── proxy/
-│   ├── manager.go
-│   └── rotation.go
-├── evasion/
-│   ├── stealth.go
-│   └── jitter.go
-├── state/
-│   ├── checkpoint.go
-│   └── resume.go
-├── ui/
-│   └── dashboard.go
+├── recon/
+│   └── scanner.go
 ├── logger/
 │   └── log.go
-└── utils/
-    └── helpers.go
+├── ui/
+│   └── app.go
+└── README.md
 ```
 
-## 🚀 نحوه استفاده
+## 🚀 Quick Start
 
-### 1. نصب
+### Installation
+
 ```bash
-git clone https://github.com/falconjonz/falcon_rdp.git
-cd falcon_rdp
+git clone https://github.com/drjyhpaz/new_falcon.git
+cd new_falcon
 go mod download
-go build -o falcon_rdp
+go build -o falcon main.go
 ```
 
-### 2. فایل‌های ورودی
+### Basic Usage
 
-**servers.txt**
-```
-192.168.1.1:3389
-192.168.1.2:3389
-10.0.0.5:3389
+```bash
+./falcon
 ```
 
-**users.txt**
+## 📝 Configuration Files
+
+Create the following files in your working directory:
+
+### servers.txt
+```
+192.168.1.100:3389
+192.168.1.101:3389
+192.168.1.102:3389
+```
+
+### users.txt
 ```
 administrator
-Admin
-user
+admin
 guest
 ```
 
-**passwords.txt**
+### passwords.txt
 ```
-Password123!
-Admin123
-test
-default
+Password123
+Admin@123
+Guest123
 ```
 
-### 3. اجرا
+## 🛠️ Building
+
 ```bash
-./falcon_rdp
+go build -o falcon
 ```
 
-سپس از رابط کاربری استفاده کنید.
+## 📜 License
 
-## 📊 نتایج و گزارش
+MIT License - See LICENSE file for details
 
-### results.json
-```json
-[
-  {
-    "ip": "192.168.1.1",
-    "port": 3389,
-    "username": "administrator",
-    "password": "Password123!",
-    "domain": "",
-    "timestamp": "2024-01-15T10:30:45Z",
-    "os_info": {},
-    "admin": false
-  }
-]
-```
+## ⚠️ Disclaimer
 
-### state.json (برای Resume)
-```json
-{
-  "last_credential_index": 245,
-  "last_target_index": 3,
-  "targets": [...],
-  "successful_logins": [...],
-  "total_attempts": 1230,
-  "total_successes": 5
-}
-```
-
-## ⚙️ تنظیمات
-
-### معماری
-- **Threads**: خودکار (CPU*2) یا دستی
-- **Timeout**: 10s پیش‌فرض
-
-### ضدتشخیص
-- **Stealth Mode**: فعال/غیرفعال
-- **Jitter Min/Max**: تاخیر تصادفی (ms)
-- **Adaptive Rate**: کاهش نرخ خودکار
-
-### Proxy
-- **Type**: SOCKS5، HTTP، TOR
-- **File**: لیست Proxy از فایل
-- **Rotation**: Round-Robin
-
-### امنیت
-- **Insecure TLS**: برای گواهی نامعتبر
-- **NLA Detection**: تشخیص خودکار
-
-## 📈 Performance
-
-- **بیش از 1000 تلاش در ثانیه** (بدون Proxy)
-- **مقیاس‌پذیری** تا 100+ هدف همزمان
-- **کم مصرف** با Streaming فایل‌های بزرگ
-
-## 📝 لایسنس
-
-MIT License
-
-## ⚠️ تنبیه قانونی
-
-این ابزار **فقط برای اهداف آموزشی و تست نفوذ مجاز** است. استفاده در سیستم‌های غیرمجاز **غیرقانونی** و **غیراخلاقی** است.
-
----
-
-**توسعه‌دهنده**: falconjonz  
-**نسخه**: 1.0.0  
-**آخرین بروزرسانی**: 2026
+This tool is for authorized security testing only. Unauthorized access to computer systems is illegal.

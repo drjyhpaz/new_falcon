@@ -1,46 +1,37 @@
-# Binaries for programs and plugins
+# Binaries
+falcon
 *.exe
-*.exe~
 *.dll
 *.so
-*.so.*
 *.dylib
 
-# Test binary, built with `go test -c`
+# Test binaries
 *.test
-
-# Output of the go coverage tool
 *.out
 
-# Go workspace file
-go.work
-
 # IDE
-.idea/
 .vscode/
+.idea/
 *.swp
 *.swo
 *~
 .DS_Store
 
-# Project specific
-falcon_rdp
-falcon_rdp.exe
+# Build
+bin/
+dist/
 
-# Input files
+# Data files
 servers.txt
 users.txt
 passwords.txt
 credentials.txt
-proxies.txt
-
-# Output files
+*.log
 results.json
+results.csv
 state.json
 sessions.json
-logs/
-reports/
+proxies.txt
 
 # Config
-.env
-.env.local
+.falcon/
